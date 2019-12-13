@@ -1,2 +1,2 @@
-# skylight-cli
-Command line interface for Skylight
+# skytool
+Upskill's Skylight command line interface for extension management. Currently unsupported and under development.
