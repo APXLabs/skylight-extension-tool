@@ -1,0 +1,26 @@
+const BaseLanguage = require("../language");
+
+class Language extends BaseLanguage {
+
+    get shortname() {
+        return "javascript"
+    }
+
+    get name() {
+        return "Javascript/NodeJS"
+    }
+
+    get aliases() {
+        return ["js", "javascript", "nodejs"];
+    }
+
+    async init() {
+        throw "Javascript is currently unsupported."
+    }
+
+    get active() {
+        return true;
+    }
+}
+
+module.exports = Language;
