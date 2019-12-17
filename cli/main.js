@@ -21,8 +21,6 @@ for(let commandFile of commands) {
      } catch(e) {
          SkyUtils.logError(e);
      } });
-
-     command.additionalYargs(argv);
 }
 
 argv.help('h').alias('h', 'help').argv
