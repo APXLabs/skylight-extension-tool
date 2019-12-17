@@ -1,6 +1,6 @@
 {
   "name": "skytool",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Upskill's Skylight command line interface for extension management.",
   "main": "index.js",
   "scripts": {
