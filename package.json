@@ -1,6 +1,6 @@
 {
   "name": "skytool",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "Upskill's Skylight command line interface for extension management.",
   "main": "index.js",
   "scripts": {
@@ -24,5 +24,14 @@
   "bugs": {
     "url": "https://github.com/APXLabs/skylight-cli/issues"
   },
-  "homepage": "https://github.com/APXLabs/skylight-cli#readme"
+  "homepage": "https://github.com/APXLabs/skylight-cli#readme",
+  "bin": "cli/main.js",
+  "preferGlobal": true,
+  "dependencies": {
+    "atob": "^2.1.2",
+    "enquirer": "^2.3.2",
+    "node-fetch": "^2.6.0",
+    "unzipper": "^0.10.5",
+    "yargs": "^15.0.2"
+  }
 }
