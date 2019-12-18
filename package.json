@@ -17,7 +17,8 @@
     "interface",
     "extension",
     "cli",
-    "upskill"
+    "upskill",
+    "tool"
   ],
   "author": "Upskill",
   "license": "GPL-3.0-or-later",
