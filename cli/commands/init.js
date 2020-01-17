@@ -29,7 +29,6 @@ class Command extends BaseCommand {
 
     async callback({language}) {
         if(SkyUtils.directoryIsInitialized()) throw "This directory has already been initialized as a Skylight extension folder. If you would like to create a new extension, please change to an empty directory.";
-        if(!SkyUtils.directoryIsEmpty()) throw "This directory is not empty. If you would like to create a new extension, please empty this directory or change to a new empty directory.";
 
         //If no language was specified, prompt the user for one
         if(typeof language === "undefined") {
