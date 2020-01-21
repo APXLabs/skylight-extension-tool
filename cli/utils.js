@@ -6,11 +6,11 @@ const {spawn} = require('child_process');
 const fs = require("fs");
 const atob = require("atob");
 const path = require("path");
-const unzipper = require("unzipper");
 const GITHUB_ROOT = "https://api.github.com/repos/APXLabs";
 const CURRENT_WORKING_DIRECTORY = process.cwd();
 const SKYTOOL_CONFIG_PATH = path.join(CURRENT_WORKING_DIRECTORY, "skytool.config");
 const SDK_CONFIG_NAME = "sdk.config";
+var AdmZip = require('adm-zip');
 
 module.exports = {
     SDK_FOLDER: path.join(CURRENT_WORKING_DIRECTORY, "sdks")
@@ -59,42 +59,46 @@ module.exports = {
     },
 
     async downloadRepo(toDirectoryPath, repo, ref) {
+
         const downloadLink = `${GITHUB_ROOT}/${repo}/zipball/${ref}`;
         const repoZip = await fetch(downloadLink);
         fs.mkdirSync(toDirectoryPath, { recursive: true });
         const repoData = await repoZip.arrayBuffer();
         const contentsPath = path.join(toDirectoryPath, "contents.zip");
         fs.writeFileSync(contentsPath, Buffer.from(repoData));
-        fs.createReadStream(contentsPath)
-            .pipe(unzipper.Extract({ path: toDirectoryPath })).on("close", () => {
-                fs.unlinkSync(contentsPath);
+        
+        var zip = new AdmZip(contentsPath);
+        zip.extractAllTo(toDirectoryPath, true);
+        
+        fs.unlinkSync(contentsPath);
 
-                //Look for the folder and rename it
-                const repoFolderPath = this.getRepoFolderInDirectory(toDirectoryPath);
-                if(typeof repoFolderPath === "undefined")return;
-                const repoFinalPath = path.join(toDirectoryPath, "repo");
-                fs.renameSync(repoFolderPath, repoFinalPath);
+        //Look for the folder and rename it
+        const repoFolderPath = this.getRepoFolderInDirectory(toDirectoryPath);
+        if(typeof repoFolderPath === "undefined")return;
 
-                //Get the config for this sdk
-                const sdkConfig = JSON.parse(fs.readFileSync(path.join(repoFinalPath, SDK_CONFIG_NAME)));
+        const repoFinalPath = path.join(toDirectoryPath, "repo");
+        fs.renameSync(repoFolderPath, repoFinalPath);
 
-                //Remove any unnecessary files
-                const keepFiles = sdkConfig.keep;
-                const sdkFiles = fs.readdirSync(repoFinalPath);
-                for(let file of sdkFiles) {
-                    if(keepFiles.includes(file))continue;
-                    if(file === SDK_CONFIG_NAME)continue;
-                    const filePath = path.join(repoFinalPath, file);
-                    const fileStat = fs.statSync(filePath);
-                    if(fileStat.isDirectory())fs.rmdirSync(filePath, { recursive: true });
-                    else { fs.unlinkSync(filePath); }
-                }
+        //Get the config for this sdk
+        const sdkConfig = JSON.parse(fs.readFileSync(path.join(repoFinalPath, SDK_CONFIG_NAME)));
 
-                //Copy over the template
-                const templatePath = path.join(repoFinalPath, sdkConfig.template);
-                fs.copyFileSync(templatePath, path.join(process.cwd(), path.basename(templatePath)));
-            });
+        //Remove any unnecessary files
+        const keepFiles = sdkConfig.keep;
+        const sdkFiles = fs.readdirSync(repoFinalPath);
+        for(let file of sdkFiles) {
+            if(keepFiles.includes(file))continue;
+            if(file === SDK_CONFIG_NAME)continue;
+            const filePath = path.join(repoFinalPath, file);
+            const fileStat = fs.statSync(filePath);
+            if(fileStat.isDirectory())fs.rmdirSync(filePath, { recursive: true });
+            else { fs.unlinkSync(filePath); }
+        }
 
+        //Copy over the template
+        const templatePath = path.join(repoFinalPath, sdkConfig.template);
+        fs.copyFileSync(templatePath, path.join(process.cwd(), path.basename(templatePath)));
+        
+            
     },
 
     getRepoFolderInDirectory(directory) {

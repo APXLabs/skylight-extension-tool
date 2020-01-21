@@ -65,6 +65,7 @@ class Language extends BaseLanguage {
         const addedLine = "<DefaultItemExcludes>$(DefaultItemExcludes);sdks\\**</DefaultItemExcludes>\n";
         csprofFileContents = csprofFileContents.replace(addBeforeLine, addedLine + addBeforeLine);
         fs.writeFileSync(csprofFilePath, csprofFileContents);
+        
     }
 
     async addPackage(packageName, version = null, feed=SKYLIGHT_NUGET_FEED) {
