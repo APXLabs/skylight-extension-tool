@@ -16,6 +16,7 @@ module.exports = {
     SDK_FOLDER: path.join(CURRENT_WORKING_DIRECTORY, "sdks")
     , CONFIG_FILE: SKYTOOL_CONFIG_PATH
     , CREDENTIALS_FILE: path.join(CURRENT_WORKING_DIRECTORY, "credentials.json")
+    , TEMPLATES_DIRECTORY: path.join(__dirname, "files")
     , async runCommand(command, args) {
         return new Promise((resolve, reject) => {
             var errorString = "";
