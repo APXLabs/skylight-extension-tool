@@ -47,7 +47,7 @@ class Language extends BaseLanguage {
         await this.runDotnetCommand("new console");
         
         //Install our nuget packages
-        await this.addPackage("Skylight.Sdk", "1.0.19");
+        await this.addPackage("Skylight.Sdk");
         
         //Pull down our examples
         const tags = await this.getRepoTags();
@@ -67,8 +67,9 @@ class Language extends BaseLanguage {
         fs.writeFileSync(csprofFilePath, csprofFileContents);
     }
 
-    async addPackage(packageName, version, feed=SKYLIGHT_NUGET_FEED) {
-        await this.runDotnetCommand(`add package ${packageName} -s ${feed} -v ${version}`)
+    async addPackage(packageName, version = null, feed=SKYLIGHT_NUGET_FEED) {
+        const versionString = version == null ? "" : `-v ${version}`;
+        await this.runDotnetCommand(`add package ${packageName} -s ${feed} ${versionString}`)
     }
 
     async run() {
