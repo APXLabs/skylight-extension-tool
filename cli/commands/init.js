@@ -49,9 +49,8 @@ class Command extends BaseCommand {
         language = this.getLanguage(language);
         if(typeof language === "undefined") throw "Unknown language specified. Valid options are: \n" + this.languagesDescriptionString;
 
-        //Create the config file
-        SkyUtils.setConfig("language", language.shortname);
         await language.init();
+        SkyUtils.setConfig("language", language.shortname);
 
     }
 

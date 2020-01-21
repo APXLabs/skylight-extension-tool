@@ -52,7 +52,7 @@ class Language extends BaseLanguage {
         //Pull down our examples
         const tags = await this.getRepoTags();
         const latestTag = tags[0];
-        SkyUtils.setConfig("sdkVersion", latestTag.name);
+        //SkyUtils.setConfig("sdkVersion", latestTag.name);
 
         const ref = latestTag.commit.sha;
         await SkyUtils.downloadRepo(path.join(CURRENT_WORKING_DIRECTORY, "sdks", "cs", latestTag.name), this.examplesRepo, ref);
@@ -69,8 +69,9 @@ class Language extends BaseLanguage {
     }
 
     async addPackage(packageName, version = null, feed=SKYLIGHT_NUGET_FEED) {
-        const versionString = version == null ? "" : `-v ${version}`;
-        await this.runDotnetCommand(`add package ${packageName} -s ${feed} ${versionString}`)
+        const versionString = version == null ? "" : ` -v ${version}`;
+        const addPackageCommand = `add package ${packageName} -s ${feed}${versionString}`;
+        await this.runDotnetCommand(addPackageCommand)
     }
 
     async run() {
@@ -84,6 +85,10 @@ class Language extends BaseLanguage {
         } catch(e) {
             throw "Could not run dotnet -- please visit https://dotnet.microsoft.com/download to ensure you have the latest .NET Core SDK for your platform."
         }
+    }
+
+    async getSdkVersion() {
+
     }
 }
 

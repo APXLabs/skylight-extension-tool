@@ -27,13 +27,13 @@ module.exports = {
             {stdio: ['ignore', 'pipe', 'pipe']}); //Ignore stdin, pipe stdout and stderr
             
             source.stdout.on('data', (data) => {
-                console.log(data.toString());
+                //console.log(data.toString());
             })
             source.stderr.on('data', (data) => {
                 errorString += data.toString();
             })
             source.on('error', (e) => {
-                reject();
+                reject(e);
             })
             source.on('close', (code) => {
                 resolve({code, error:errorString});
@@ -124,6 +124,7 @@ module.exports = {
     directoryIsEmpty() {
         return fs.readdirSync(process.cwd()).length === 0
     },
+
     setConfig(key, value) {
         var configData = {};
         try {
@@ -134,7 +135,7 @@ module.exports = {
     },
 
     getConfig() {
-        const configData = JSON.parse(fs.readFileSync(SKYTOOL_CONFIG_PATH));
+        const configData = JSON.parse(fs.readFileSync(SKYTOOL_CONFIG_PATH, 'utf8'));
         return configData;
     },
     
