@@ -1,6 +1,13 @@
 
 const SkyUtils = require("./utils");
+const fs = require("fs");
 class Language {
+
+    cleanDirectory() {
+        fs.rmdirSync(SkyUtils.SDK_FOLDER, {recursive: true});
+        fs.unlinkSync(SkyUtils.CONFIG_FILE);
+        fs.unlinkSync(SkyUtils.CREDENTIALS_FILE);
+    }
 
     get shortname() {
         return "";
@@ -18,7 +25,10 @@ class Language {
         return [];
     }
 
-    async init() { }
+    async init() { 
+        this.cleanDirectory();
+        fs.writeFileSync(SkyUtils.CREDENTIALS_FILE, "");
+    }
 
     async run() { }
 

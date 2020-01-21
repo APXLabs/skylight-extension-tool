@@ -24,12 +24,17 @@ class Command extends BaseCommand {
             alias: 'l'
             , describe: "Specify the language you would like to use.\n" + this.languagesDescriptionString
         }
+        options.force = {
+            alias: 'f'
+            , describe: "Force the initialization process to overwrite any previous initializations of Skylight extensions in this folder."
+        }
         return options;
     }
 
-    async callback({language}) {
-        if(SkyUtils.directoryIsInitialized()) throw "This directory has already been initialized as a Skylight extension folder. If you would like to create a new extension, please change to an empty directory.";
-
+    async callback({language, force}) {
+        if(!force && SkyUtils.directoryIsInitialized()) throw "This directory has already been initialized as a Skylight extension folder. If you would like to create a new extension, please change to an empty directory or rerun this command with the --force (-f) flag.";
+        
+        /* Remove this until another language other than C# is supported
         //If no language was specified, prompt the user for one
         if(typeof language === "undefined") {
             const languagePrompt = new Select({
@@ -39,6 +44,8 @@ class Command extends BaseCommand {
               });
             language = await languagePrompt.run();
         }
+        */
+        language = "csharp";
         language = this.getLanguage(language);
         if(typeof language === "undefined") throw "Unknown language specified. Valid options are: \n" + this.languagesDescriptionString;
 

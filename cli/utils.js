@@ -8,11 +8,15 @@ const atob = require("atob");
 const path = require("path");
 const unzipper = require("unzipper");
 const GITHUB_ROOT = "https://api.github.com/repos/APXLabs";
-const SKYTOOL_CONFIG_PATH = path.join(process.cwd(), "skytool.config");
+const CURRENT_WORKING_DIRECTORY = process.cwd();
+const SKYTOOL_CONFIG_PATH = path.join(CURRENT_WORKING_DIRECTORY, "skytool.config");
 const SDK_CONFIG_NAME = "sdk.config";
 
 module.exports = {
-    async runCommand(command, args) {
+    SDK_FOLDER: path.join(CURRENT_WORKING_DIRECTORY, "sdks")
+    , CONFIG_FILE: SKYTOOL_CONFIG_PATH
+    , CREDENTIALS_FILE: path.join(CURRENT_WORKING_DIRECTORY, "credentials.json")
+    , async runCommand(command, args) {
         return new Promise((resolve, reject) => {
             var errorString = "";
 
@@ -115,7 +119,6 @@ module.exports = {
     directoryIsEmpty() {
         return fs.readdirSync(process.cwd()).length === 0
     },
-
     setConfig(key, value) {
         var configData = {};
         try {

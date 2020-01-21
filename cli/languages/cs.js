@@ -24,6 +24,14 @@ class Language extends BaseLanguage {
         return "skylight-netcore-sdk";
     }
 
+    cleanDirectory() {
+        super.cleanDirectory();
+        fs.rmdirSync("obj", {recursive: true});
+        fs.unlinkSync("Program.cs")
+        const dirName = path.basename(path.resolve());
+        fs.unlinkSync(`${dirName}.csproj`);
+    }
+
     async init() {
         await super.init();
         await this.runDotnetCommand("nuget locals http-cache --clear");
@@ -48,8 +56,6 @@ class Language extends BaseLanguage {
         const addedLine = "<DefaultItemExcludes>$(DefaultItemExcludes);sdks\\**</DefaultItemExcludes>\n";
         csprofFileContents = csprofFileContents.replace(addBeforeLine, addedLine + addBeforeLine);
         fs.writeFileSync(csprofFilePath, csprofFileContents);
-
-        fs.writeFileSync(path.join(CURRENT_WORKING_DIRECTORY, "credentials.json"), "");
     }
 
     async addPackage(packageName, version, feed=SKYLIGHT_NUGET_FEED) {
