@@ -26,10 +26,19 @@ class Language extends BaseLanguage {
 
     cleanDirectory() {
         super.cleanDirectory();
-        fs.rmdirSync("obj", {recursive: true});
-        fs.unlinkSync("Program.cs")
+        try {
+            fs.rmdirSync("obj", {recursive: true});
+        } catch {}
+
+        
+        try {
+            fs.unlinkSync("Program.cs")
+        } catch {}
+        
         const dirName = path.basename(path.resolve());
-        fs.unlinkSync(`${dirName}.csproj`);
+        try {
+            fs.unlinkSync(`${dirName}.csproj`);
+        } catch {}
     }
 
     async init() {

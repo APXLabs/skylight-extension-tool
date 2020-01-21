@@ -4,9 +4,17 @@ const fs = require("fs");
 class Language {
 
     cleanDirectory() {
-        fs.rmdirSync(SkyUtils.SDK_FOLDER, {recursive: true});
-        fs.unlinkSync(SkyUtils.CONFIG_FILE);
-        fs.unlinkSync(SkyUtils.CREDENTIALS_FILE);
+        try {
+            fs.rmdirSync(SkyUtils.SDK_FOLDER, {recursive: true});
+        } catch {}
+
+        try {
+            fs.unlinkSync(SkyUtils.CONFIG_FILE);
+        } catch {}
+        
+        try {
+            fs.unlinkSync(SkyUtils.CREDENTIALS_FILE);
+        } catch {}
     }
 
     get shortname() {
