@@ -11,7 +11,7 @@ class Command extends BaseCommand {
     }
 
     get description() {
-        return "Initialize the current working directory as a Skylight extension."
+        return "Show the current SDK version, or specify a version of the SDK to change to using --change (-c)."
     }
 
     get options() {
