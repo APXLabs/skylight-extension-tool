@@ -15,6 +15,7 @@ class Command extends BaseCommand {
         if(!SkyUtils.directoryIsInitialized()) throw "Please make sure the directory is initialized by running 'skytool init'."
         const config = SkyUtils.getConfig();
         const language = await this.getLanguage(config.language);
+        //SkyUtils.log("Running Skylight extension from this directory.")
         await language.run();
     }
 }

@@ -85,8 +85,8 @@ class Language extends BaseLanguage {
     }
 
     async run() {
-        const {code, error} = await this.runDotnetCommand("run");
-        if(code !== -1) SkyUtils.logError(error);
+        //We provide the user with instructions on how to run this extension, rather than running it for them, as user input gets blocked
+        SkyUtils.log("Run this extension by entering the command `dotnet run` in this directory.");
     }
 
     async runDotnetCommand(args) {
