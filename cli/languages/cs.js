@@ -43,21 +43,32 @@ class Language extends BaseLanguage {
 
     async init() {
         await super.init();
+
+        
+        SkyUtils.log("Clearing NuGet cache.");
         await this.runDotnetCommand("nuget locals http-cache --clear");
+        
+        SkyUtils.log("Creating new C# console application.");
         await this.runDotnetCommand("new console");
         
         //Install our nuget packages
+        SkyUtils.log("Installing NuGet packages.");
         await this.addPackage("Skylight.Sdk");
         
         //Pull down our examples
         const tags = await this.getRepoTags();
+
+        //We'll use the latest SDK
         const latestTag = tags[0];
+
         //SkyUtils.setConfig("sdkVersion", latestTag.name);
 
         const ref = latestTag.commit.sha;
+        SkyUtils.log("Downloading C# SDK examples.");
         await SkyUtils.downloadRepo(path.join(CURRENT_WORKING_DIRECTORY, "sdks", "cs", latestTag.name), this.examplesRepo, ref);
 
         //For dotnet, we need to modify the .csproj file to not include the SDKs
+        SkyUtils.log("Modifying .csproj file.");
         const csprojFile = fs.readdirSync(CURRENT_WORKING_DIRECTORY).filter((f) => path.extname(f) === ".csproj")[0]
         const csprofFilePath = path.join(CURRENT_WORKING_DIRECTORY, csprojFile);
         var csprofFileContents = fs.readFileSync(csprofFilePath, "utf-8");
@@ -65,7 +76,6 @@ class Language extends BaseLanguage {
         const addedLine = "<DefaultItemExcludes>$(DefaultItemExcludes);sdks\\**</DefaultItemExcludes>\n";
         csprofFileContents = csprofFileContents.replace(addBeforeLine, addedLine + addBeforeLine);
         fs.writeFileSync(csprofFilePath, csprofFileContents);
-        
     }
 
     async addPackage(packageName, version = null, feed=SKYLIGHT_NUGET_FEED) {
@@ -88,6 +98,38 @@ class Language extends BaseLanguage {
     }
 
     async getSdkVersion() {
+            const packagesList = await this.runDotnetCommand("list package");
+            const results = /Skylight\.Sdk\s*([0-9]+\.[0-9]+\.[0-9]+)/.exec(packagesList.result);
+            return results[1];
+    }
+
+    async setSdkVersion(version) {
+        if(typeof version === "undefined" || version === "latest") {
+            version = null;
+        }
+
+        await this.addPackage("Skylight.Sdk", version);
+        await this.restoreSdkExamples();
+    }
+
+    async restoreSdkExamples() {
+        const version = await this.getSdkVersion();
+        
+        //Pull down our examples
+        const tags = await this.getRepoTags();
+
+        //We'll use the latest SDK
+        const versionTag = tags.filter((t) => { return t.name === "v"+version})[0];
+        if(typeof versionTag === "undefined") throw "Examples not found for this SDK version";
+
+        try {
+            SkyUtils.log("Removing SDKs folder.");
+            fs.rmdirSync(SkyUtils.SDK_FOLDER, {recursive: true});
+        } catch {}
+
+        const ref = versionTag.commit.sha;
+        SkyUtils.log("Restoring C# SDK examples.");
+        await SkyUtils.downloadRepo(path.join(CURRENT_WORKING_DIRECTORY, "sdks", "cs", versionTag.name), this.examplesRepo, ref, false);
 
     }
 }

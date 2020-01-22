@@ -18,9 +18,9 @@ for(let commandFile of commands) {
     //For each of our commands, load it into yargs
     argv.command(commandName, command.description, command.options, async (...args) => { try {
         await command.callback(...args);
-     } catch(e) {
-         SkyUtils.logError(e);
-     } });
+    } catch(e) {
+        SkyUtils.logError(e);
+    } });
 }
 
 argv.help('h').alias('h', 'help').argv

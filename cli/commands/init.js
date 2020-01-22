@@ -49,8 +49,16 @@ class Command extends BaseCommand {
         language = this.getLanguage(language);
         if(typeof language === "undefined") throw "Unknown language specified. Valid options are: \n" + this.languagesDescriptionString;
 
+        SkyUtils.log("Initializing directory as Skylight extension.");
+        SkyUtils.log("Cleaning directory.");
+        SkyUtils.cleanDirectory();
+        fs.writeFileSync(SkyUtils.CREDENTIALS_FILE, "<Replace the contents of this file with the API credentials JSON from Skylight Web>");
+        fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, ".gitignore"), path.join(process.cwd(), ".gitignore"));
+        fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, "credentials.json.template"), path.join(process.cwd(), "credentials.json.template"));
+
         await language.init();
         SkyUtils.setConfig("language", language.shortname);
+        SkyUtils.log("Skylight extension initialized.");
 
     }
 

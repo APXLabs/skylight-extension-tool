@@ -20,6 +20,7 @@ module.exports = {
     , async runCommand(command, args) {
         return new Promise((resolve, reject) => {
             var errorString = "";
+            var result = "";
 
             if(!Array.isArray(args))args = args.split(" ");
             
@@ -28,6 +29,7 @@ module.exports = {
             
             source.stdout.on('data', (data) => {
                 //console.log(data.toString());
+                result += data.toString();
             })
             source.stderr.on('data', (data) => {
                 errorString += data.toString();
@@ -36,7 +38,7 @@ module.exports = {
                 reject(e);
             })
             source.on('close', (code) => {
-                resolve({code, error:errorString});
+                resolve({code, error:errorString, result: result});
             })
         })
     }, 
@@ -59,7 +61,7 @@ module.exports = {
         return config;
     },
 
-    async downloadRepo(toDirectoryPath, repo, ref) {
+    async downloadRepo(toDirectoryPath, repo, ref, copyTemplate = true) {
 
         const downloadLink = `${GITHUB_ROOT}/${repo}/zipball/${ref}`;
         const repoZip = await fetch(downloadLink);
@@ -94,6 +96,8 @@ module.exports = {
             if(fileStat.isDirectory())fs.rmdirSync(filePath, { recursive: true });
             else { fs.unlinkSync(filePath); }
         }
+
+        if(!copyTemplate)return;
 
         //Copy over the template
         const templatePath = path.join(repoFinalPath, sdkConfig.template);
@@ -138,8 +142,26 @@ module.exports = {
         const configData = JSON.parse(fs.readFileSync(SKYTOOL_CONFIG_PATH, 'utf8'));
         return configData;
     },
+
+    log(msg) {
+        console.log(msg);
+    },
     
     logError(e) {
         console.log("\x1b[31m%s\x1b[0m", e);
+    },
+    
+    cleanDirectory() {
+        try {
+            fs.rmdirSync(this.SDK_FOLDER, {recursive: true});
+        } catch {}
+
+        try {
+            fs.unlinkSync(this.CONFIG_FILE);
+        } catch {}
+        
+        try {
+            fs.unlinkSync(this.CREDENTIALS_FILE);
+        } catch {}
     }
 }
