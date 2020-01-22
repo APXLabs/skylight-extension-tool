@@ -6,15 +6,21 @@ const {spawn} = require('child_process');
 const fs = require("fs");
 const atob = require("atob");
 const path = require("path");
-const unzipper = require("unzipper");
 const GITHUB_ROOT = "https://api.github.com/repos/APXLabs";
-const SKYTOOL_CONFIG_PATH = path.join(process.cwd(), "skytool.config");
+const CURRENT_WORKING_DIRECTORY = process.cwd();
+const SKYTOOL_CONFIG_PATH = path.join(CURRENT_WORKING_DIRECTORY, "skytool.config");
 const SDK_CONFIG_NAME = "sdk.config";
+var AdmZip = require('adm-zip');
 
 module.exports = {
-    async runCommand(command, args) {
+    SDK_FOLDER: path.join(CURRENT_WORKING_DIRECTORY, "sdks")
+    , CONFIG_FILE: SKYTOOL_CONFIG_PATH
+    , CREDENTIALS_FILE: path.join(CURRENT_WORKING_DIRECTORY, "credentials.json")
+    , TEMPLATES_DIRECTORY: path.join(__dirname, "files")
+    , async runCommand(command, args) {
         return new Promise((resolve, reject) => {
             var errorString = "";
+            var result = "";
 
             if(!Array.isArray(args))args = args.split(" ");
             
@@ -22,16 +28,17 @@ module.exports = {
             {stdio: ['ignore', 'pipe', 'pipe']}); //Ignore stdin, pipe stdout and stderr
             
             source.stdout.on('data', (data) => {
-                console.log(data.toString());
+                //console.log(data.toString());
+                result += data.toString();
             })
             source.stderr.on('data', (data) => {
                 errorString += data.toString();
             })
             source.on('error', (e) => {
-                reject();
+                reject(e);
             })
             source.on('close', (code) => {
-                resolve({code, error:errorString});
+                resolve({code, error:errorString, result: result});
             })
         })
     }, 
@@ -54,43 +61,49 @@ module.exports = {
         return config;
     },
 
-    async downloadRepo(toDirectoryPath, repo, ref) {
+    async downloadRepo(toDirectoryPath, repo, ref, copyTemplate = true) {
+
         const downloadLink = `${GITHUB_ROOT}/${repo}/zipball/${ref}`;
         const repoZip = await fetch(downloadLink);
         fs.mkdirSync(toDirectoryPath, { recursive: true });
         const repoData = await repoZip.arrayBuffer();
         const contentsPath = path.join(toDirectoryPath, "contents.zip");
         fs.writeFileSync(contentsPath, Buffer.from(repoData));
-        fs.createReadStream(contentsPath)
-            .pipe(unzipper.Extract({ path: toDirectoryPath })).on("close", () => {
-                fs.unlinkSync(contentsPath);
+        
+        var zip = new AdmZip(contentsPath);
+        zip.extractAllTo(toDirectoryPath, true);
+        
+        fs.unlinkSync(contentsPath);
 
-                //Look for the folder and rename it
-                const repoFolderPath = this.getRepoFolderInDirectory(toDirectoryPath);
-                if(typeof repoFolderPath === "undefined")return;
-                const repoFinalPath = path.join(toDirectoryPath, "repo");
-                fs.renameSync(repoFolderPath, repoFinalPath);
+        //Look for the folder and rename it
+        const repoFolderPath = this.getRepoFolderInDirectory(toDirectoryPath);
+        if(typeof repoFolderPath === "undefined")return;
 
-                //Get the config for this sdk
-                const sdkConfig = JSON.parse(fs.readFileSync(path.join(repoFinalPath, SDK_CONFIG_NAME)));
+        const repoFinalPath = path.join(toDirectoryPath, "repo");
+        fs.renameSync(repoFolderPath, repoFinalPath);
 
-                //Remove any unnecessary files
-                const keepFiles = sdkConfig.keep;
-                const sdkFiles = fs.readdirSync(repoFinalPath);
-                for(let file of sdkFiles) {
-                    if(keepFiles.includes(file))continue;
-                    if(file === SDK_CONFIG_NAME)continue;
-                    const filePath = path.join(repoFinalPath, file);
-                    const fileStat = fs.statSync(filePath);
-                    if(fileStat.isDirectory())fs.rmdirSync(filePath, { recursive: true });
-                    else { fs.unlinkSync(filePath); }
-                }
+        //Get the config for this sdk
+        const sdkConfig = JSON.parse(fs.readFileSync(path.join(repoFinalPath, SDK_CONFIG_NAME)));
 
-                //Copy over the template
-                const templatePath = path.join(repoFinalPath, sdkConfig.template);
-                fs.copyFileSync(templatePath, path.join(process.cwd(), path.basename(templatePath)));
-            });
+        //Remove any unnecessary files
+        const keepFiles = sdkConfig.keep;
+        const sdkFiles = fs.readdirSync(repoFinalPath);
+        for(let file of sdkFiles) {
+            if(keepFiles.includes(file))continue;
+            if(file === SDK_CONFIG_NAME)continue;
+            const filePath = path.join(repoFinalPath, file);
+            const fileStat = fs.statSync(filePath);
+            if(fileStat.isDirectory())fs.rmdirSync(filePath, { recursive: true });
+            else { fs.unlinkSync(filePath); }
+        }
 
+        if(!copyTemplate)return;
+
+        //Copy over the template
+        const templatePath = path.join(repoFinalPath, sdkConfig.template);
+        fs.copyFileSync(templatePath, path.join(process.cwd(), path.basename(templatePath)));
+        
+            
     },
 
     getRepoFolderInDirectory(directory) {
@@ -126,11 +139,29 @@ module.exports = {
     },
 
     getConfig() {
-        const configData = JSON.parse(fs.readFileSync(SKYTOOL_CONFIG_PATH));
+        const configData = JSON.parse(fs.readFileSync(SKYTOOL_CONFIG_PATH, 'utf8'));
         return configData;
+    },
+
+    log(msg) {
+        console.log(msg);
     },
     
     logError(e) {
         console.log("\x1b[31m%s\x1b[0m", e);
+    },
+    
+    cleanDirectory() {
+        try {
+            fs.rmdirSync(this.SDK_FOLDER, {recursive: true});
+        } catch {}
+
+        try {
+            fs.unlinkSync(this.CONFIG_FILE);
+        } catch {}
+        
+        try {
+            fs.unlinkSync(this.CREDENTIALS_FILE);
+        } catch {}
     }
 }

@@ -24,12 +24,17 @@ class Command extends BaseCommand {
             alias: 'l'
             , describe: "Specify the language you would like to use.\n" + this.languagesDescriptionString
         }
+        options.force = {
+            alias: 'f'
+            , describe: "Force the initialization process to overwrite any previous initializations of Skylight extensions in this folder."
+        }
         return options;
     }
 
-    async callback({language}) {
-        if(SkyUtils.directoryIsInitialized()) throw "This directory has already been initialized as a Skylight extension folder. If you would like to create a new extension, please change to an empty directory.";
-
+    async callback({language, force}) {
+        if(!force && SkyUtils.directoryIsInitialized()) throw "This directory has already been initialized as a Skylight extension folder. If you would like to create a new extension, please change to an empty directory or rerun this command with the --force (-f) flag.";
+        
+        /* Remove this until another language other than C# is supported
         //If no language was specified, prompt the user for one
         if(typeof language === "undefined") {
             const languagePrompt = new Select({
@@ -39,12 +44,21 @@ class Command extends BaseCommand {
               });
             language = await languagePrompt.run();
         }
+        */
+        language = "csharp";
         language = this.getLanguage(language);
         if(typeof language === "undefined") throw "Unknown language specified. Valid options are: \n" + this.languagesDescriptionString;
 
-        //Create the config file
-        SkyUtils.setConfig("language", language.shortname);
+        SkyUtils.log("Initializing directory as Skylight extension.");
+        SkyUtils.log("Cleaning directory.");
+        SkyUtils.cleanDirectory();
+        fs.writeFileSync(SkyUtils.CREDENTIALS_FILE, "<Replace the contents of this file with the API credentials JSON from Skylight Web>");
+        fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, ".gitignore"), path.join(process.cwd(), ".gitignore"));
+        fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, "credentials.json.template"), path.join(process.cwd(), "credentials.json.template"));
+
         await language.init();
+        SkyUtils.setConfig("language", language.shortname);
+        SkyUtils.log("Skylight extension initialized.");
 
     }
 

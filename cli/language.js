@@ -1,5 +1,7 @@
 
 const SkyUtils = require("./utils");
+const fs = require("fs");
+const path = require("path");
 class Language {
 
     get shortname() {
@@ -18,7 +20,9 @@ class Language {
         return [];
     }
 
-    async init() { }
+    async init() { 
+
+    }
 
     async run() { }
 
@@ -30,6 +34,11 @@ class Language {
         const tagsData = await SkyUtils.githubRequest(this.examplesRepo, "tags");
         return JSON.parse(tagsData);
     }
+    
+    async getSdkVersion() {}
+    async setSdkVersion(version) {}
+
+    async restoreSdkExamples() {}
 }
 
 module.exports = Language;

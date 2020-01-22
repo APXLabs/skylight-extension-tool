@@ -1,6 +1,6 @@
 {
   "name": "skytool",
-  "version": "0.0.7",
+  "version": "0.0.14",
   "description": "Upskill's Skylight command line tool for extension management.",
   "main": "index.js",
   "scripts": {
@@ -29,10 +29,10 @@
   "bin": "cli/main.js",
   "preferGlobal": true,
   "dependencies": {
+    "adm-zip": "^0.4.13",
     "atob": "^2.1.2",
     "enquirer": "^2.3.2",
     "node-fetch": "^2.6.0",
-    "unzipper": "^0.10.5",
     "yargs": "^15.0.2"
   }
 }
