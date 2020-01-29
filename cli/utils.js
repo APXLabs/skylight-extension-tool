@@ -17,7 +17,12 @@ module.exports = {
     , CONFIG_FILE: SKYTOOL_CONFIG_PATH
     , CREDENTIALS_FILE: path.join(CURRENT_WORKING_DIRECTORY, "credentials.json")
     , TEMPLATES_DIRECTORY: path.join(__dirname, "files")
-    , async runCommand(command, args, verbose = false) {
+    , verbose: false
+    , setVerbose(verbose) {
+        this.verbose = verbose;
+    }
+    , async runCommand(command, args) {
+        const thiz = this;
         return new Promise((resolve, reject) => {
             var errorString = "";
             var result = "";
@@ -28,7 +33,7 @@ module.exports = {
             {stdio: ['ignore', 'pipe', 'pipe']}); //Ignore stdin, pipe stdout and stderr
             
             source.stdout.on('data', (data) => {
-                if(verbose)this.log(data.toString());
+                if(thiz.verbose)this.log(data.toString());
                 result += data.toString();
             })
             source.stderr.on('data', (data) => {

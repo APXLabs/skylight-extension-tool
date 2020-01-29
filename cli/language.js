@@ -39,6 +39,10 @@ class Language {
     async setSdkVersion(version) {}
 
     async restoreSdkExamples() {}
+
+    cleanDirectory() {
+        SkyUtils.cleanDirectory();
+    }
 }
 
 module.exports = Language;

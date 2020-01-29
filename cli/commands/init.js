@@ -28,12 +28,17 @@ class Command extends BaseCommand {
             alias: 'f'
             , describe: "Force the initialization process to overwrite any previous initializations of Skylight extensions in this folder."
         }
+        options.verbose = {
+            alias: 'v'
+            , describe: "Run the init command in verbose mode."
+        }
         return options;
     }
 
-    async callback({language, force}) {
+    async callback({language, force, verbose}) {
         if(!force && SkyUtils.directoryIsInitialized()) throw "This directory has already been initialized as a Skylight extension folder. If you would like to create a new extension, please change to an empty directory or rerun this command with the --force (-f) flag.";
-        
+        if(typeof verbose === "undefined")verbose = false;
+        SkyUtils.setVerbose(verbose);
         /* Remove this until another language other than C# is supported
         //If no language was specified, prompt the user for one
         if(typeof language === "undefined") {
@@ -51,7 +56,7 @@ class Command extends BaseCommand {
 
         SkyUtils.log("Initializing directory as Skylight extension.");
         SkyUtils.log("Cleaning directory.");
-        SkyUtils.cleanDirectory();
+        language.cleanDirectory();
         fs.writeFileSync(SkyUtils.CREDENTIALS_FILE, "<Replace the contents of this file with the API credentials JSON from Skylight Web>");
         fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, "gitignore"), path.join(process.cwd(), ".gitignore"));
         fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, "credentials.json.template"), path.join(process.cwd(), "credentials.json.template"));

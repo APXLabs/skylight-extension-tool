@@ -4,7 +4,9 @@ const path = require("path");
 const fs = require("fs");
 const process = require("process");
 const SKYLIGHT_NUGET_FEED = "https://pkgs.dev.azure.com/UpskillSDK/dotnet-sdk/_packaging/skylight-sdk/nuget/v3/index.json";
+const OFFICIAL_NUGET_FEED = "https://api.nuget.org/v3/index.json"
 const CURRENT_WORKING_DIRECTORY = process.cwd();
+const SKYLIGHT_SDK_VERSION = "1.1.0";
 
 class Language extends BaseLanguage {
 
@@ -53,35 +55,33 @@ class Language extends BaseLanguage {
         
         //Install our nuget packages
         SkyUtils.log("Installing NuGet packages.");
-        await this.addPackage("Skylight.Sdk");
+        await this.addPackage("Skylight.Sdk", SKYLIGHT_SDK_VERSION);
         
         //Pull down our examples
-        const tags = await this.getRepoTags();
-
-        //We'll use the latest SDK
-        const latestTag = tags[0];
-
-        //SkyUtils.setConfig("sdkVersion", latestTag.name);
-
-        const ref = latestTag.commit.sha;
-        SkyUtils.log("Downloading C# SDK examples.");
-        await SkyUtils.downloadRepo(path.join(CURRENT_WORKING_DIRECTORY, "sdks", "cs", latestTag.name), this.examplesRepo, ref);
+        await this.restoreSdkExamples(true);
 
         //For dotnet, we need to modify the .csproj file to not include the SDKs
         SkyUtils.log("Modifying .csproj file.");
         const csprojFile = fs.readdirSync(CURRENT_WORKING_DIRECTORY).filter((f) => path.extname(f) === ".csproj")[0]
         const csprofFilePath = path.join(CURRENT_WORKING_DIRECTORY, csprojFile);
         var csprofFileContents = fs.readFileSync(csprofFilePath, "utf-8");
-        const addBeforeLine = "</PropertyGroup>";
-        const addedLine = "<DefaultItemExcludes>$(DefaultItemExcludes);sdks\\**</DefaultItemExcludes>\n";
+        var addBeforeLine = "</PropertyGroup>";
+        var addedLine = "<DefaultItemExcludes>$(DefaultItemExcludes);sdks\\**</DefaultItemExcludes>\n";
         csprofFileContents = csprofFileContents.replace(addBeforeLine, addedLine + addBeforeLine);
+
+        addBeforeLine = "</PropertyGroup>";
+        addedLine = `<RestoreSources>${OFFICIAL_NUGET_FEED};${SKYLIGHT_NUGET_FEED}</RestoreSources>\n`;
+        csprofFileContents = csprofFileContents.replace(addBeforeLine, addedLine + addBeforeLine);
+        
         fs.writeFileSync(csprofFilePath, csprofFileContents);
     }
 
     async addPackage(packageName, version = null, feed=SKYLIGHT_NUGET_FEED) {
         const versionString = version == null ? "" : ` -v ${version}`;
-        const addPackageCommand = `add package ${packageName} -s ${feed}${versionString}`;
+        const addPackageCommand = `add package ${packageName} -s ${feed}${versionString} -n`;
         await this.runDotnetCommand(addPackageCommand)
+        const restoreCommand = `restore -s ${OFFICIAL_NUGET_FEED} -s ${feed} --ignore-failed-sources`;
+        await this.runDotnetCommand(restoreCommand);
     }
 
     async run() {
@@ -99,12 +99,13 @@ class Language extends BaseLanguage {
 
     async getSdkVersion() {
             const packagesList = await this.runDotnetCommand("list package");
-            const results = /Skylight\.Sdk\s*([0-9]+\.[0-9]+\.[0-9]+)/.exec(packagesList.result);
-            return results[1];
+            var results = /Skylight\.Sdk\s*\S+\s*([0-9]+\.[0-9]+\.[0-9]+)/.exec(packagesList.result);
+            if(results !== null) return results[1];
+            return null;
     }
 
     async setSdkVersion(version) {
-        if(typeof version === "undefined" || version === "latest") {
+        if(typeof version === "undefined" || version === "latest" || version === "*") {
             version = null;
         }
 
@@ -112,8 +113,9 @@ class Language extends BaseLanguage {
         await this.restoreSdkExamples();
     }
 
-    async restoreSdkExamples() {
+    async restoreSdkExamples(copyTemplate = false) {
         const version = await this.getSdkVersion();
+        if(version === null)throw "Please ensure that a Skylight SDK is installed."
         
         //Pull down our examples
         const tags = await this.getRepoTags();
@@ -129,7 +131,7 @@ class Language extends BaseLanguage {
 
         const ref = versionTag.commit.sha;
         SkyUtils.log("Restoring C# SDK examples.");
-        await SkyUtils.downloadRepo(path.join(CURRENT_WORKING_DIRECTORY, "sdks", "cs", versionTag.name), this.examplesRepo, ref, false);
+        await SkyUtils.downloadRepo(path.join(CURRENT_WORKING_DIRECTORY, "sdks", "cs", versionTag.name), this.examplesRepo, ref, copyTemplate);
 
     }
 }

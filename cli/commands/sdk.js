@@ -31,6 +31,8 @@ class Command extends BaseCommand {
         if(typeof language === "undefined") throw "Unknown language specified in this extension. Please ensure the skytool.config file has not been corrupted."
 
         var version = await language.getSdkVersion();
+        if(version === null)version = "No Skylight SDK installed";
+        if(version === "*")version = "Latest";
         console.log(`Current SDK version: ${version}`);
 
         if(typeof change === "boolean") change = "latest";
