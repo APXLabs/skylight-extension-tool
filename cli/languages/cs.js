@@ -6,7 +6,7 @@ const process = require("process");
 const SKYLIGHT_NUGET_FEED = "https://pkgs.dev.azure.com/UpskillSDK/dotnet-sdk/_packaging/skylight-sdk/nuget/v3/index.json";
 const OFFICIAL_NUGET_FEED = "https://api.nuget.org/v3/index.json"
 const CURRENT_WORKING_DIRECTORY = process.cwd();
-const SKYLIGHT_SDK_VERSION = "1.1.0";
+const SKYLIGHT_SDK_VERSION = "1.2.0-beta.5";
 
 class Language extends BaseLanguage {
 
@@ -32,6 +32,9 @@ class Language extends BaseLanguage {
             fs.rmdirSync("obj", {recursive: true});
         } catch {}
 
+        try {
+            fs.rmdirSync("bin", {recursive: true});
+        } catch {}
         
         try {
             fs.unlinkSync("Program.cs")
@@ -46,6 +49,8 @@ class Language extends BaseLanguage {
     async init() {
         await super.init();
 
+        SkyUtils.log("Creating NuGet config.");
+        fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, "nuget.config"), path.join(process.cwd(), "nuget.config"));
         
         SkyUtils.log("Clearing NuGet cache.");
         await this.runDotnetCommand("nuget locals http-cache --clear");
@@ -56,7 +61,10 @@ class Language extends BaseLanguage {
         //Install our nuget packages
         SkyUtils.log("Installing NuGet packages.");
         await this.addPackage("Skylight.Sdk", SKYLIGHT_SDK_VERSION);
-        
+        await this.addPackage("System.Configuration.ConfigurationManager", "4.7.0", OFFICIAL_NUGET_FEED);
+        await this.addPackage("log4net", "2.0.8", OFFICIAL_NUGET_FEED);
+        await this.restorePackages();
+
         //Pull down our examples
         await this.restoreSdkExamples(true);
 
@@ -68,19 +76,27 @@ class Language extends BaseLanguage {
         var addBeforeLine = "</PropertyGroup>";
         var addedLine = "<DefaultItemExcludes>$(DefaultItemExcludes);sdks\\**</DefaultItemExcludes>\n";
         csprofFileContents = csprofFileContents.replace(addBeforeLine, addedLine + addBeforeLine);
-
+        /*
         addBeforeLine = "</PropertyGroup>";
         addedLine = `<RestoreSources>${OFFICIAL_NUGET_FEED};${SKYLIGHT_NUGET_FEED}</RestoreSources>\n`;
         csprofFileContents = csprofFileContents.replace(addBeforeLine, addedLine + addBeforeLine);
-        
+        */
+
         fs.writeFileSync(csprofFilePath, csprofFileContents);
+
+        fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, "App.config"), path.join(SkyUtils.APPCONFIG_DIRECTORY, "App.config"));
+        fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, "log4net.config"), path.join(SkyUtils.APPCONFIG_DIRECTORY, "log4net.config"));
+
     }
 
     async addPackage(packageName, version = null, feed=SKYLIGHT_NUGET_FEED) {
         const versionString = version == null ? "" : ` -v ${version}`;
         const addPackageCommand = `add package ${packageName} -s ${feed}${versionString} -n`;
         await this.runDotnetCommand(addPackageCommand)
-        const restoreCommand = `restore -s ${OFFICIAL_NUGET_FEED} -s ${feed} --ignore-failed-sources`;
+    }
+
+    async restorePackages() {
+        const restoreCommand = `restore -s ${OFFICIAL_NUGET_FEED} -s ${SKYLIGHT_NUGET_FEED} --ignore-failed-sources`;
         await this.runDotnetCommand(restoreCommand);
     }
 
@@ -99,7 +115,7 @@ class Language extends BaseLanguage {
 
     async getSdkVersion() {
             const packagesList = await this.runDotnetCommand("list package");
-            var results = /Skylight\.Sdk\s*\S+\s*([0-9]+\.[0-9]+\.[0-9]+)/.exec(packagesList.result);
+            var results = /Skylight\.Sdk\s*\S+\s*([0-9]+\.[0-9]+\.[\S]+)/.exec(packagesList.result);
             if(results !== null) return results[1];
             return null;
     }
@@ -116,7 +132,7 @@ class Language extends BaseLanguage {
     async restoreSdkExamples(copyTemplate = false) {
         const version = await this.getSdkVersion();
         if(version === null)throw "Please ensure that a Skylight SDK is installed."
-        
+
         //Pull down our examples
         const tags = await this.getRepoTags();
 

@@ -57,9 +57,11 @@ class Command extends BaseCommand {
         SkyUtils.log("Initializing directory as Skylight extension.");
         SkyUtils.log("Cleaning directory.");
         language.cleanDirectory();
+        try {
+            fs.mkdirSync(SkyUtils.APPCONFIG_DIRECTORY);
+        } catch {}
         fs.writeFileSync(SkyUtils.CREDENTIALS_FILE, "<Replace the contents of this file with the API credentials JSON from Skylight Web>");
         fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, "gitignore"), path.join(process.cwd(), ".gitignore"));
-        fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, "credentials.json.template"), path.join(process.cwd(), "credentials.json.template"));
 
         await language.init();
         SkyUtils.setConfig("language", language.shortname);

@@ -26,6 +26,10 @@ class Command extends BaseCommand {
         const language = this.getLanguage(config.language);
         if(typeof language === "undefined") throw "Unknown language specified in this extension. If the skytool.config file has been corrupted, please revert it to an earlier version."
         
+        try {
+            fs.mkdirSync(SkyUtils.APPCONFIG_DIRECTORY);
+        } catch {}
+
         if(!fs.existsSync(SkyUtils.CREDENTIALS_FILE)) {
             SkyUtils.log("Restoring credentials file.");
             fs.writeFileSync(SkyUtils.CREDENTIALS_FILE, "<Replace the contents of this file with the API credentials JSON from Skylight Web>");

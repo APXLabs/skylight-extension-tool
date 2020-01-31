@@ -355,3 +355,6 @@ MigrationBackup/
 # Skylight files
 sdks/
 credentials.json
+obj/
+bin/
+logs/

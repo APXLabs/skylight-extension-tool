@@ -8,14 +8,18 @@ const atob = require("atob");
 const path = require("path");
 const GITHUB_ROOT = "https://api.github.com/repos/APXLabs";
 const CURRENT_WORKING_DIRECTORY = process.cwd();
-const SKYTOOL_CONFIG_PATH = path.join(CURRENT_WORKING_DIRECTORY, "skytool.config");
+const APPCONFIG_DIRECTORY = path.join(CURRENT_WORKING_DIRECTORY, "config");
+const LOGS_DIRECTORY = path.join(CURRENT_WORKING_DIRECTORY, "logs");
+const SKYTOOL_CONFIG_PATH = path.join(CURRENT_WORKING_DIRECTORY, ".skyconfig");
 const SDK_CONFIG_NAME = "sdk.config";
 var AdmZip = require('adm-zip');
 
 module.exports = {
     SDK_FOLDER: path.join(CURRENT_WORKING_DIRECTORY, "sdks")
+    , APPCONFIG_DIRECTORY: APPCONFIG_DIRECTORY
+    , LOGS_DIRECTORY: LOGS_DIRECTORY
     , CONFIG_FILE: SKYTOOL_CONFIG_PATH
-    , CREDENTIALS_FILE: path.join(CURRENT_WORKING_DIRECTORY, "credentials.json")
+    , CREDENTIALS_FILE: path.join(APPCONFIG_DIRECTORY, "credentials.json")
     , TEMPLATES_DIRECTORY: path.join(__dirname, "files")
     , verbose: false
     , setVerbose(verbose) {
@@ -159,6 +163,14 @@ module.exports = {
     cleanDirectory() {
         try {
             fs.rmdirSync(this.SDK_FOLDER, {recursive: true});
+        } catch {}
+
+        try {
+            fs.rmdirSync(this.APPCONFIG_DIRECTORY, {recursive: true});
+        } catch {}
+
+        try {
+            fs.rmdirSync(this.LOGS_DIRECTORY, {recursive: true});
         } catch {}
 
         try {
