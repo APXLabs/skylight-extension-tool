@@ -32,10 +32,13 @@ class Command extends BaseCommand {
             alias: 'v'
             , describe: "Run the init command in verbose mode."
         }
+        options.helloworld = {
+            describe: "Start with the HelloWorld example as a template."
+        }
         return options;
     }
 
-    async callback({language, force, verbose}) {
+    async callback({language, force, verbose, helloworld}) {
         if(!force && SkyUtils.directoryIsInitialized()) throw "This directory has already been initialized as a Skylight extension folder. If you would like to create a new extension, please change to an empty directory or rerun this command with the --force (-f) flag.";
         if(typeof verbose === "undefined")verbose = false;
         SkyUtils.setVerbose(verbose);
@@ -63,7 +66,7 @@ class Command extends BaseCommand {
         fs.writeFileSync(SkyUtils.CREDENTIALS_FILE, "<Replace the contents of this file with the API credentials JSON from Skylight Web>");
         fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, "gitignore"), path.join(process.cwd(), ".gitignore"));
 
-        await language.init();
+        await language.init(helloworld);
         SkyUtils.setConfig("language", language.shortname);
         SkyUtils.log("Skylight extension initialized.");
 

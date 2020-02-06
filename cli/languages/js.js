@@ -14,7 +14,7 @@ class Language extends BaseLanguage {
         return ["js", "javascript", "nodejs"];
     }
 
-    async init() {
+    async init(useHelloWorld=false) {
         throw "Javascript is currently unsupported."
     }
 

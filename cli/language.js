@@ -20,7 +20,7 @@ class Language {
         return [];
     }
 
-    async init() { 
+    async init(useHelloWorld=false) { 
 
     }
 

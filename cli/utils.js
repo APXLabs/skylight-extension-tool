@@ -70,7 +70,7 @@ module.exports = {
         return config;
     },
 
-    async downloadRepo(toDirectoryPath, repo, ref, copyTemplate = true) {
+    async downloadRepo(toDirectoryPath, repo, ref, copyTemplate = true, useHelloWorld = false) {
 
         const downloadLink = `${GITHUB_ROOT}/${repo}/zipball/${ref}`;
         const repoZip = await fetch(downloadLink);
@@ -109,7 +109,7 @@ module.exports = {
         if(!copyTemplate)return;
 
         //Copy over the template
-        const templatePath = path.join(repoFinalPath, sdkConfig.template);
+        const templatePath = path.join(repoFinalPath, useHelloWorld ? sdkConfig.helloworld : sdkConfig.template);
         fs.copyFileSync(templatePath, path.join(process.cwd(), path.basename(templatePath)));
         
             

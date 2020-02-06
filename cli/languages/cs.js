@@ -6,7 +6,7 @@ const process = require("process");
 const SKYLIGHT_NUGET_FEED = "https://pkgs.dev.azure.com/UpskillSDK/dotnet-sdk/_packaging/skylight-sdk/nuget/v3/index.json";
 const OFFICIAL_NUGET_FEED = "https://api.nuget.org/v3/index.json"
 const CURRENT_WORKING_DIRECTORY = process.cwd();
-const SKYLIGHT_SDK_VERSION = "1.2.0-beta.5";
+const SKYLIGHT_SDK_VERSION = "1.2.0-beta.8";
 
 class Language extends BaseLanguage {
 
@@ -46,7 +46,7 @@ class Language extends BaseLanguage {
         } catch {}
     }
 
-    async init() {
+    async init(useHelloWorld=false) {
         await super.init();
 
         SkyUtils.log("Creating NuGet config.");
@@ -66,7 +66,7 @@ class Language extends BaseLanguage {
         await this.restorePackages();
 
         //Pull down our examples
-        await this.restoreSdkExamples(true);
+        await this.restoreSdkExamples(true, useHelloWorld);
 
         //For dotnet, we need to modify the .csproj file to not include the SDKs
         SkyUtils.log("Modifying .csproj file.");
@@ -129,7 +129,7 @@ class Language extends BaseLanguage {
         await this.restoreSdkExamples();
     }
 
-    async restoreSdkExamples(copyTemplate = false) {
+    async restoreSdkExamples(copyTemplate = false, useHelloWorld = false) {
         const version = await this.getSdkVersion();
         if(version === null)throw "Please ensure that a Skylight SDK is installed."
 
@@ -147,7 +147,7 @@ class Language extends BaseLanguage {
 
         const ref = versionTag.commit.sha;
         SkyUtils.log("Restoring C# SDK examples.");
-        await SkyUtils.downloadRepo(path.join(CURRENT_WORKING_DIRECTORY, "sdks", "cs", versionTag.name), this.examplesRepo, ref, copyTemplate);
+        await SkyUtils.downloadRepo(path.join(CURRENT_WORKING_DIRECTORY, "sdks", "cs", versionTag.name), this.examplesRepo, ref, copyTemplate, useHelloWorld);
 
     }
 }
