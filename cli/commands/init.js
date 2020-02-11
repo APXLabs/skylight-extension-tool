@@ -39,6 +39,7 @@ class Command extends BaseCommand {
     }
 
     async callback({language, force, verbose, helloworld}) {
+        if(!SkyUtils.directoryIsEmpty()) throw "Only empty directories can be initialized as a Skylight extension. If you would like to create a new extension here, please empty this folder."
         if(!force && SkyUtils.directoryIsInitialized()) throw "This directory has already been initialized as a Skylight extension folder. If you would like to create a new extension, please change to an empty directory or rerun this command with the --force (-f) flag.";
         if(typeof verbose === "undefined")verbose = false;
         SkyUtils.setVerbose(verbose);

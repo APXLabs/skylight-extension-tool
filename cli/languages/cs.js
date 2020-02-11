@@ -6,7 +6,7 @@ const process = require("process");
 const SKYLIGHT_NUGET_FEED = "https://pkgs.dev.azure.com/UpskillSDK/dotnet-sdk/_packaging/skylight-sdk/nuget/v3/index.json";
 const OFFICIAL_NUGET_FEED = "https://api.nuget.org/v3/index.json"
 const CURRENT_WORKING_DIRECTORY = process.cwd();
-const SKYLIGHT_SDK_VERSION = "1.2.0-beta.8";
+const SKYLIGHT_SDK_VERSION = "1.2.0";
 
 class Language extends BaseLanguage {
 
@@ -52,12 +52,12 @@ class Language extends BaseLanguage {
         SkyUtils.log("Creating NuGet config.");
         fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, "nuget.config"), path.join(process.cwd(), "nuget.config"));
         
-        SkyUtils.log("Clearing NuGet cache.");
-        await this.runDotnetCommand("nuget locals http-cache --clear");
-        
         SkyUtils.log("Creating new C# console application.");
         await this.runDotnetCommand("new console");
         
+        SkyUtils.log("Clearing NuGet cache.");
+        await this.clearNugetCache();
+
         //Install our nuget packages
         SkyUtils.log("Installing NuGet packages.");
         await this.addPackage("Skylight.Sdk", SKYLIGHT_SDK_VERSION);
@@ -87,6 +87,10 @@ class Language extends BaseLanguage {
         fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, "App.config"), path.join(SkyUtils.APPCONFIG_DIRECTORY, "App.config"));
         fs.copyFileSync(path.join(SkyUtils.TEMPLATES_DIRECTORY, "log4net.config"), path.join(SkyUtils.APPCONFIG_DIRECTORY, "log4net.config"));
 
+    }
+
+    async clearNugetCache() {
+        await this.runDotnetCommand("nuget locals http-cache --clear");
     }
 
     async addPackage(packageName, version = null, feed=SKYLIGHT_NUGET_FEED) {
@@ -124,8 +128,13 @@ class Language extends BaseLanguage {
         if(typeof version === "undefined" || version === "latest" || version === "*") {
             version = null;
         }
+        
+        SkyUtils.log("Clearing NuGet cache.");
+        await this.clearNugetCache();
 
+        SkyUtils.log("Installing NuGet packages.");
         await this.addPackage("Skylight.Sdk", version);
+        await this.restorePackages();
         await this.restoreSdkExamples();
     }
 
