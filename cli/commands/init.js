@@ -24,10 +24,6 @@ class Command extends BaseCommand {
             alias: 'l'
             , describe: "Specify the language you would like to use.\n" + this.languagesDescriptionString
         }
-        options.force = {
-            alias: 'f'
-            , describe: "Force the initialization process to overwrite any previous initializations of Skylight extensions in this folder."
-        }
         options.verbose = {
             alias: 'v'
             , describe: "Run the init command in verbose mode."
@@ -38,9 +34,8 @@ class Command extends BaseCommand {
         return options;
     }
 
-    async callback({language, force, verbose, helloworld}) {
+    async callback({language, verbose, helloworld}) {
         if(!SkyUtils.directoryIsEmpty()) throw "Only empty directories can be initialized as a Skylight extension. If you would like to create a new extension here, please empty this folder."
-        if(!force && SkyUtils.directoryIsInitialized()) throw "This directory has already been initialized as a Skylight extension folder. If you would like to create a new extension, please change to an empty directory or rerun this command with the --force (-f) flag.";
         if(typeof verbose === "undefined")verbose = false;
         SkyUtils.setVerbose(verbose);
         /* Remove this until another language other than C# is supported
