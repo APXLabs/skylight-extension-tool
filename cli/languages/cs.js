@@ -6,7 +6,7 @@ const process = require("process");
 const SKYLIGHT_NUGET_FEED = "https://pkgs.dev.azure.com/UpskillSDK/dotnet-sdk/_packaging/skylight-sdk/nuget/v3/index.json";
 const OFFICIAL_NUGET_FEED = "https://api.nuget.org/v3/index.json"
 const CURRENT_WORKING_DIRECTORY = process.cwd();
-const SKYLIGHT_SDK_VERSION = "1.3.0";
+const SKYLIGHT_SDK_VERSION = "1.*";
 
 class Language extends BaseLanguage {
 
